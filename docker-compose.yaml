@@ -1,0 +1,53 @@
+version: "1"
+
+services:
+  nifi:
+    image: apache/nifi:latest
+    ports:
+      - "8443:8443"
+    environment:
+      - SINGLE_USER_CREDENTIALS_USERNAME=admin
+      - SINGLE_USER_CREDENTIALS_PASSWORD=admin123456789
+    volumes:
+      - ./input:/var/lib/input/data
+      - ./NiFi/conf:/opt/nifi/nifi-current/conf
+    depends_on:
+      - cassandra1
+  nifi-registry:
+    image: apache/nifi-registry:latest
+    ports:
+      - "18080:18080"
+    volumes: 
+      - ./NiFi/nifi_registry/database:/opt/nifi-registry/nifi-registry-current/database 
+      - ./NiFi/nifi_registry/flow_storage:/opt/nifi-registry/nifi-registry-current/flow_storage
+    depends_on:
+      - nifi
+  cassandra1:
+    image: cassandra:latest
+    container_name: cassandra-node-1
+    volumes:
+      - ./cassandra/data1:/var/lib/cassandra
+    ports:
+      - "9042:9042"
+    environment:
+      - CASSANDRA_SEEDS=cassandra1
+      - CASSANDRA_CLUSTER_NAME=Raw Storage Cluster
+      - CASSANDRA_DC=se1
+      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
+  # cassandra2: # Second node. No need to expose ports, just reference the node seed.
+  #   image: cassandra:latest
+  #   container_name: cassandra-node-2
+  #   volumes:
+  #     - ./cassandra/data2:/var/lib/cassandra
+  #   environment:
+  #     - CASSANDRA_SEEDS=cassandra1
+  #     - CASSANDRA_CLUSTER_NAME=Raw Storage Cluster
+  #     - CASSANDRA_DC=se1
+  #     - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
+  #   depends_on:
+  #     - cassandra1
+
+
+
+    
+       
